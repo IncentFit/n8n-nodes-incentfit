@@ -1,19 +1,23 @@
 {
-	"name": "n8n-nodes-<...>",
+	"name": "n8n-nodes-incentfit",
 	"version": "0.1.0",
-	"description": "",
+	"description": "n8n community node for the IncentFit wellness incentive API",
 	"license": "MIT",
-	"homepage": "",
+	"homepage": "https://github.com/IncentFit/n8n-nodes-incentfit",
 	"keywords": [
-		"n8n-community-node-package"
+		"n8n-community-node-package",
+		"incentfit",
+		"wellness",
+		"fitness",
+		"incentives"
 	],
 	"author": {
-		"name": "",
-		"email": ""
+		"name": "IncentFit",
+		"email": "api@incentfit.com"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/<...>/n8n-nodes-<...>.git"
+		"url": "https://github.com/IncentFit/n8n-nodes-incentfit.git"
 	},
 	"scripts": {
 		"build": "n8n-node build",
@@ -31,12 +35,8 @@
 		"n8nNodesApiVersion": 1,
 		"strict": true,
 		"credentials": [
-			"dist/credentials/GithubIssuesApi.credentials.js",
-			"dist/credentials/GithubIssuesOAuth2Api.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/GithubIssues/GithubIssues.node.js",
-			"dist/nodes/Example/Example.node.js"
 		]
 	},
 	"devDependencies": {
@@ -48,5 +48,8 @@
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
+	},
+	"dependencies": {
+		"@devlikeapro/n8n-openapi-node": "^0.1.4"
 	}
 }
