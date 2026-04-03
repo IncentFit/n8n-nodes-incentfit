@@ -1,0 +1,2502 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "IncentFit API",
+    "description": "# Overview\n\nThe IncentFit API provides programmatic access to IncentFit's wellness platform. It is organized into the following subsystems:\n\n## REST Data Endpoints\nQuery activities, fitness data, payments, and activity types. All data endpoints use **POST** with a JSON body containing optional filter, sort, and pagination parameters. Results are automatically scoped to all entities authorized for your API client. Authenticated with an **OAuth2 Bearer token**.\n\n## SCIM User Provisioning\n[SCIM 2.0](https://tools.ietf.org/html/rfc7644) endpoints for automated user lifecycle management (list and update users). Data is scoped to all entities linked to the API client. Authenticated with an **OAuth2 Bearer token**.\n\n## Embeddable Widgets\nIframe-embeddable views for activity logging, timeline, devices, rewards, and challenges. Authenticated via a **JWT signed with your RSA private key** — does *not* use OAuth2 Bearer tokens.\n\n## MCP (Model Context Protocol)\nJSON-RPC endpoint at `/v2/mcp` for AI tool integrations. Discovery available at `/.well-known/mcp.json`. Authenticated with an **OAuth2 Bearer token**.",
+    "contact": {
+      "email": "api@incentfit.com"
+    },
+    "version": "2.0",
+    "x-logo": {
+      "url": "https://content.incentfit.com/branding/dh43b1kiuefenrw34923f44bu30qb28bec22812y/logo_large.png"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.incentfit.com"
+    }
+  ],
+  "paths": {
+    "/v2/scim/Users": {
+      "get": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "List Users",
+        "description": "List users with optional SCIM filter and pagination. Returns all users within the API client's entity scope.",
+        "operationId": "scimListUsers",
+        "parameters": [
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "Max results per page (default 50).",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "startIndex",
+            "in": "query",
+            "description": "1-based offset for pagination.",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "SCIM filter expression (e.g. userName eq \"user@example.com\").",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SCIM list response with user resources",
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "Create User",
+        "description": "Create a new user. Matches against existing users using the organization's configured matching strategy (email, unique ID, or absolute unique ID). If a matching inactive user is found, they are reactivated.",
+        "operationId": "scimCreateUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScimError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScimError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/scim/Users/{id}": {
+      "get": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "Get User",
+        "description": "Retrieve a single user by ID.",
+        "operationId": "scimGetUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "SqID-encoded user ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User resource",
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScimError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "Replace User",
+        "description": "Full replacement of a user resource (RFC 7644 PUT).",
+        "operationId": "scimReplaceUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "SqID-encoded user ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "Delete User",
+        "description": "Soft-delete a user by deactivating them. Sets eligibility end date to now. Returns 204 No Content.",
+        "operationId": "scimDeleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "SqID-encoded user ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deactivated"
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScimError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "User Provisioning"
+        ],
+        "summary": "Patch User",
+        "description": "Partial update of a user resource (RFC 7644 PATCH). Accepts add, replace, and remove operations. Commonly used to deactivate users by setting active to false.",
+        "operationId": "scimPatchUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "SqID-encoded user ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScimPatchOp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/ping": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Ping",
+        "description": "Ping\n\nWill return the current time in unix timestamp format",
+        "operationId": "ping",
+        "responses": {
+          "200": {
+            "description": "Check if you can connect to the API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ping"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/rest/activities": {
+      "post": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Retrieve Activities",
+        "description": "Activities describe specific actions that a user completed",
+        "operationId": "Activities",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseRequestBodyWithSince"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull fitness activities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/rest/activitytypes": {
+      "post": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Retrieve Activity Types",
+        "description": "Activity Types provide metadata about an activity, scoped to the requesting entity. Returns global activity types plus those specific to the entity.",
+        "operationId": "ActivityTypes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "description": "Max records per page (max 1000). Default: 100.",
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "offset": {
+                    "description": "Number of records to skip. Default: 0.",
+                    "type": "integer",
+                    "example": 0
+                  },
+                  "filter": {
+                    "description": "Filter results by field values. Keys are field names (use the same names returned in responses, e.g. `IndividualID`, `StartTime`). ID fields accept SqID-encoded values. Each field contains a `values` array of filter conditions and an optional `operator` (`and`/`or`, default `and`).",
+                    "type": "object",
+                    "example": {
+                      "IndividualID": {
+                        "values": [
+                          {
+                            "type": "equals",
+                            "value": "86Rf07xd"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": {
+                      "properties": {
+                        "operator": {
+                          "description": "Logical operator for combining multiple conditions on the same field. Default: and.",
+                          "type": "string",
+                          "enum": [
+                            "and",
+                            "or"
+                          ]
+                        },
+                        "values": {
+                          "description": "Array of filter conditions.",
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "type": {
+                                "description": "Filter operator.",
+                                "type": "string",
+                                "enum": [
+                                  "equals",
+                                  "notEqual",
+                                  "contains",
+                                  "notContains",
+                                  "startsWith",
+                                  "endsWith",
+                                  "greaterThan",
+                                  "greaterThanOrEqual",
+                                  "lessThan",
+                                  "lessThanOrEqual",
+                                  "inRange",
+                                  "notInRange",
+                                  "in",
+                                  "notIn",
+                                  "nulled",
+                                  "notNulled"
+                                ]
+                              },
+                              "value": {
+                                "description": "The value to compare against. For ID fields, pass the SqID-encoded string. For `in`/`notIn`, pass an array of values."
+                              },
+                              "valueTo": {
+                                "description": "Upper bound for `inRange`/`notInRange` filters."
+                              },
+                              "dateFrom": {
+                                "description": "Start date (alternative to `value` for date fields).",
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "dateTo": {
+                                "description": "End date (alternative to `valueTo` for date fields).",
+                                "type": "string",
+                                "format": "date"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "sort": {
+                    "description": "Sort results by one or more fields. Use the same field names returned in responses (e.g. `StartTime`, `IndividualID`).",
+                    "type": "array",
+                    "items": {
+                      "required": [
+                        "property",
+                        "direction"
+                      ],
+                      "properties": {
+                        "property": {
+                          "description": "Field name to sort by.",
+                          "type": "string"
+                        },
+                        "direction": {
+                          "description": "Sort direction.",
+                          "type": "string",
+                          "enum": [
+                            "asc",
+                            "desc"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "example": [
+                      {
+                        "property": "StartTime",
+                        "direction": "desc"
+                      }
+                    ]
+                  },
+                  "search": {
+                    "description": "Full-text search across specified columns.",
+                    "properties": {
+                      "text": {
+                        "description": "Search text (matched with LIKE %text%).",
+                        "type": "string"
+                      },
+                      "columns": {
+                        "description": "Column names to search across. Uses the same field names returned in responses.",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "OrganizationID": {
+                    "description": "Optional. SqID-encoded Organization ID to narrow results to a single authorized organization. If omitted, returns activity types across all entities authorized for your API client.",
+                    "type": "string",
+                    "example": "86Rf07xd"
+                  },
+                  "PartnerID": {
+                    "description": "Optional. SqID-encoded Partner ID to narrow results to a single authorized partner. If omitted, returns activity types across all entities authorized for your API client.",
+                    "type": "string",
+                    "example": "86Rf07xd"
+                  }
+                },
+                "description": "Common request body parameters for REST data endpoints. Results are automatically scoped to the entities authorized for your API client. Use the `filter` parameter to narrow by `OrganizationID`, `UserGroupID`, or any other field."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull activity types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityTypes"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/rest/exercises": {
+      "post": {
+        "tags": [
+          "Fitness Data"
+        ],
+        "summary": "Retrieve Exercises",
+        "operationId": "exercises",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseRequestBodyWithSince"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull raw fitness activities from third party sources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExercisesPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/rest/routines": {
+      "post": {
+        "tags": [
+          "Fitness Data"
+        ],
+        "summary": "Retrieve Routines",
+        "operationId": "routines",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseRequestBodyWithSince"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull fitness Routines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutinePage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/rest/sleeps": {
+      "post": {
+        "tags": [
+          "Fitness Data"
+        ],
+        "summary": "Retrieve Sleeps",
+        "operationId": "sleeps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseRequestBodyWithSince"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull fitness Sleeps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/rest/payments": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Retrieve Payments",
+        "description": "Payments describe specific payments made to a user",
+        "operationId": "Payments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowseRequestBodyWithSince"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pull user payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          },
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "jwk": {
+        "properties": {
+          "kty": {
+            "description": "The 'kty' (key type) parameter identifies the cryptographic algorithm family used with the key, such as 'RSA' or 'EC'",
+            "type": "string"
+          },
+          "n": {
+            "description": "RSA public modulus n",
+            "type": "string"
+          },
+          "e": {
+            "description": "RSA public exponent e",
+            "type": "string"
+          },
+          "kid": {
+            "description": "The 'kid' (key ID) parameter is used to match a specific key.",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "externalDocs": {
+          "url": "https://tools.ietf.org/html/rfc7517"
+        },
+        "example": {
+          "kty": "RSA",
+          "n": "1j49LwYSlKAvi5EQ47EARMfTpmoHb20hAOH0sFM9nAGEokezwxGSrm8UW2S8yqw6xO7THvcgdjKexsU0OvUhUxxxFIqH-POH-bnvFQmgqLOOsmB31OwDbPLiBHsJ_PSgzSXvdU9c4I7ZUMFskD7sTL8s4kbdMvB7cb4hKaEkWwiH9wXquVY8qSGnFEQ12TbShIzhHf10ldZynvjvR5UjQ4RnxfDyIL062zi1_wlVLcenUGglRXXlMCeX1wSkJwHp9iWmvWxp9pbnNJe4eaTpwndCbsOpfUuxb4VImTpBjGFLdsTwnVNhr-j5ARg82wEB-ILA3m268iSRbfHe7Jgs_Q",
+          "e": "AQAB",
+          "kid": "45c202038c1e9ecbab0a83986f42593dc8507d39"
+        }
+      },
+      "JWTS": {
+        "properties": {
+          "keys": {
+            "description": "An array of JWK Public Keys for this server.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/jwk"
+            }
+          }
+        },
+        "type": "object"
+      },
+      "UsersResponse": {
+        "type": "object",
+        "properties": {
+          "schemas": {
+            "description": "schemas",
+            "type": "array",
+            "format": "string",
+            "items": {
+              "type": "string",
+              "example": "urn:ietf:params:scim:api:messages:2.0:ListResponse",
+              "default": "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+            }
+          },
+          "totalResults": {
+            "description": "totalResults",
+            "type": "integer",
+            "example": 1200
+          },
+          "itemsPerPage": {
+            "description": "itemsPerPage",
+            "type": "integer",
+            "example": 25
+          },
+          "startIndex": {
+            "description": "startIndex",
+            "type": "integer",
+            "example": 1
+          },
+          "Resources": {
+            "description": "Array of User resources",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        },
+        "description": "SCIM List Resource"
+      },
+      "ScimError": {
+        "type": "object",
+        "properties": {
+          "schemas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "urn:ietf:params:scim:api:messages:2.0:Error"
+            ]
+          },
+          "totalResults": {
+            "description": "totalResults",
+            "type": "integer",
+            "example": 1200
+          },
+          "itemsPerPage": {
+            "description": "itemsPerPage",
+            "type": "integer",
+            "example": 25
+          },
+          "startIndex": {
+            "description": "startIndex",
+            "type": "integer",
+            "example": 1
+          },
+          "detail": {
+            "description": "Human-readable error message",
+            "type": "string",
+            "example": "Resource not found"
+          },
+          "status": {
+            "description": "HTTP status code as string",
+            "type": "string",
+            "example": "404"
+          },
+          "scimType": {
+            "description": "SCIM error type (e.g. uniqueness, invalidValue, invalidFilter)",
+            "type": "string",
+            "example": "uniqueness"
+          }
+        },
+        "description": "SCIM List Resource"
+      },
+      "ScimPatchOp": {
+        "type": "object",
+        "properties": {
+          "schemas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+            ]
+          },
+          "totalResults": {
+            "description": "totalResults",
+            "type": "integer",
+            "example": 1200
+          },
+          "itemsPerPage": {
+            "description": "itemsPerPage",
+            "type": "integer",
+            "example": 25
+          },
+          "startIndex": {
+            "description": "startIndex",
+            "type": "integer",
+            "example": 1
+          },
+          "Operations": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "op": {
+                  "description": "Operation type",
+                  "type": "string",
+                  "example": "replace"
+                },
+                "path": {
+                  "description": "Attribute path (optional)",
+                  "type": "string",
+                  "example": "active"
+                },
+                "value": {
+                  "description": "New value"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "SCIM List Resource"
+      },
+      "BrowseRequestBody": {
+        "description": "Common request body parameters for REST data endpoints. Results are automatically scoped to the entities authorized for your API client. Use the `filter` parameter to narrow by `OrganizationID`, `UserGroupID`, or any other field.",
+        "properties": {
+          "limit": {
+            "description": "Max records per page (max 1000). Default: 100.",
+            "type": "integer",
+            "example": 100
+          },
+          "offset": {
+            "description": "Number of records to skip. Default: 0.",
+            "type": "integer",
+            "example": 0
+          },
+          "filter": {
+            "description": "Filter results by field values. Keys are field names (use the same names returned in responses, e.g. `IndividualID`, `StartTime`). ID fields accept SqID-encoded values. Each field contains a `values` array of filter conditions and an optional `operator` (`and`/`or`, default `and`).",
+            "type": "object",
+            "example": {
+              "IndividualID": {
+                "values": [
+                  {
+                    "type": "equals",
+                    "value": "86Rf07xd"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": {
+              "properties": {
+                "operator": {
+                  "description": "Logical operator for combining multiple conditions on the same field. Default: and.",
+                  "type": "string",
+                  "enum": [
+                    "and",
+                    "or"
+                  ]
+                },
+                "values": {
+                  "description": "Array of filter conditions.",
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "type": {
+                        "description": "Filter operator.",
+                        "type": "string",
+                        "enum": [
+                          "equals",
+                          "notEqual",
+                          "contains",
+                          "notContains",
+                          "startsWith",
+                          "endsWith",
+                          "greaterThan",
+                          "greaterThanOrEqual",
+                          "lessThan",
+                          "lessThanOrEqual",
+                          "inRange",
+                          "notInRange",
+                          "in",
+                          "notIn",
+                          "nulled",
+                          "notNulled"
+                        ]
+                      },
+                      "value": {
+                        "description": "The value to compare against. For ID fields, pass the SqID-encoded string. For `in`/`notIn`, pass an array of values."
+                      },
+                      "valueTo": {
+                        "description": "Upper bound for `inRange`/`notInRange` filters."
+                      },
+                      "dateFrom": {
+                        "description": "Start date (alternative to `value` for date fields).",
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "dateTo": {
+                        "description": "End date (alternative to `valueTo` for date fields).",
+                        "type": "string",
+                        "format": "date"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          "sort": {
+            "description": "Sort results by one or more fields. Use the same field names returned in responses (e.g. `StartTime`, `IndividualID`).",
+            "type": "array",
+            "items": {
+              "required": [
+                "property",
+                "direction"
+              ],
+              "properties": {
+                "property": {
+                  "description": "Field name to sort by.",
+                  "type": "string"
+                },
+                "direction": {
+                  "description": "Sort direction.",
+                  "type": "string",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "example": [
+              {
+                "property": "StartTime",
+                "direction": "desc"
+              }
+            ]
+          },
+          "search": {
+            "description": "Full-text search across specified columns.",
+            "properties": {
+              "text": {
+                "description": "Search text (matched with LIKE %text%).",
+                "type": "string"
+              },
+              "columns": {
+                "description": "Column names to search across. Uses the same field names returned in responses.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "BrowseRequestBodyWithSince": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "description": "Max records per page (max 1000). Default: 100.",
+            "type": "integer",
+            "example": 100
+          },
+          "offset": {
+            "description": "Number of records to skip. Default: 0.",
+            "type": "integer",
+            "example": 0
+          },
+          "filter": {
+            "description": "Filter results by field values. Keys are field names (use the same names returned in responses, e.g. `IndividualID`, `StartTime`). ID fields accept SqID-encoded values. Each field contains a `values` array of filter conditions and an optional `operator` (`and`/`or`, default `and`).",
+            "type": "object",
+            "example": {
+              "IndividualID": {
+                "values": [
+                  {
+                    "type": "equals",
+                    "value": "86Rf07xd"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": {
+              "properties": {
+                "operator": {
+                  "description": "Logical operator for combining multiple conditions on the same field. Default: and.",
+                  "type": "string",
+                  "enum": [
+                    "and",
+                    "or"
+                  ]
+                },
+                "values": {
+                  "description": "Array of filter conditions.",
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "type": {
+                        "description": "Filter operator.",
+                        "type": "string",
+                        "enum": [
+                          "equals",
+                          "notEqual",
+                          "contains",
+                          "notContains",
+                          "startsWith",
+                          "endsWith",
+                          "greaterThan",
+                          "greaterThanOrEqual",
+                          "lessThan",
+                          "lessThanOrEqual",
+                          "inRange",
+                          "notInRange",
+                          "in",
+                          "notIn",
+                          "nulled",
+                          "notNulled"
+                        ]
+                      },
+                      "value": {
+                        "description": "The value to compare against. For ID fields, pass the SqID-encoded string. For `in`/`notIn`, pass an array of values."
+                      },
+                      "valueTo": {
+                        "description": "Upper bound for `inRange`/`notInRange` filters."
+                      },
+                      "dateFrom": {
+                        "description": "Start date (alternative to `value` for date fields).",
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "dateTo": {
+                        "description": "End date (alternative to `valueTo` for date fields).",
+                        "type": "string",
+                        "format": "date"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          "sort": {
+            "description": "Sort results by one or more fields. Use the same field names returned in responses (e.g. `StartTime`, `IndividualID`).",
+            "type": "array",
+            "items": {
+              "required": [
+                "property",
+                "direction"
+              ],
+              "properties": {
+                "property": {
+                  "description": "Field name to sort by.",
+                  "type": "string"
+                },
+                "direction": {
+                  "description": "Sort direction.",
+                  "type": "string",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "example": [
+              {
+                "property": "StartTime",
+                "direction": "desc"
+              }
+            ]
+          },
+          "search": {
+            "description": "Full-text search across specified columns.",
+            "properties": {
+              "text": {
+                "description": "Search text (matched with LIKE %text%).",
+                "type": "string"
+              },
+              "columns": {
+                "description": "Column names to search across. Uses the same field names returned in responses.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": "object"
+          },
+          "since": {
+            "description": "Only return records modified after this date. Default: 5 years ago.",
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01 00:00:00"
+          }
+        },
+        "description": "Common request body parameters for REST data endpoints. Results are automatically scoped to the entities authorized for your API client. Use the `filter` parameter to narrow by `OrganizationID`, `UserGroupID`, or any other field."
+      },
+      "Ping": {
+        "type": "object",
+        "properties": {},
+        "description": "The current time"
+      },
+      "ActivityPage": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Activity": {
+        "properties": {
+          "ActivityID": {
+            "description": "The unique ID of the Activity",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "IndividualID": {
+            "description": "The ID of the individual who performed the activity",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "OrganizationID": {
+            "description": "The ID of the organization the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "UserGroupID": {
+            "description": "The ID of the user group (incentive plan) the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "ActivityTypeID": {
+            "description": "The ID of the Activity Type",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "StartTime": {
+            "description": "When the activity occurred",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-06-02 00:00:00"
+          },
+          "IsSelfReported": {
+            "description": "If reported by the user manually",
+            "type": "boolean",
+            "example": false
+          },
+          "IsAdminReported": {
+            "description": "If reported by an admin manually",
+            "type": "boolean",
+            "example": false
+          },
+          "IsIncentFitAdminReported": {
+            "description": "If reported by IncentFit staff manually",
+            "type": "boolean",
+            "example": false
+          },
+          "IsDeviceReported": {
+            "description": "If data recorded originally by a device",
+            "type": "boolean",
+            "example": true
+          },
+          "IsGeoLocated": {
+            "description": "If geolocation data was used",
+            "type": "boolean",
+            "example": false
+          },
+          "IsDocUploaded": {
+            "description": "If doc uploaded for this",
+            "type": "boolean",
+            "example": false
+          },
+          "IsQRReported": {
+            "description": "If this was reported by someone scanning a QR code",
+            "type": "boolean",
+            "example": false
+          },
+          "IsSystemReported": {
+            "description": "If reported by the system automatically",
+            "type": "boolean",
+            "example": false
+          },
+          "IsThirdPartyReported": {
+            "description": "If reported by a third-party integration",
+            "type": "boolean",
+            "example": false
+          },
+          "IsAPIReported": {
+            "description": "If reported via the API",
+            "type": "boolean",
+            "example": false
+          },
+          "OriginalCount": {
+            "description": "Amount of the activity done in the unit reported by the user",
+            "type": "number",
+            "format": "double",
+            "example": 1.17
+          },
+          "OriginalUnit": {
+            "description": "The unit reported by the user",
+            "type": "string",
+            "example": "miles"
+          },
+          "RewardAmount": {
+            "description": "Amount awarded",
+            "type": "number",
+            "format": "double",
+            "example": 1.17
+          },
+          "Distance": {
+            "description": "Distance moved in meters",
+            "type": "number",
+            "format": "double",
+            "example": 1877.54
+          },
+          "Steps": {
+            "description": "Steps taken",
+            "type": "integer",
+            "format": "int32",
+            "example": 2527
+          },
+          "Duration": {
+            "description": "Time spent in seconds",
+            "type": "integer",
+            "format": "int32",
+            "example": 1380
+          },
+          "Calories": {
+            "description": "Calories expended",
+            "type": "integer",
+            "format": "int32",
+            "example": 223
+          },
+          "ElevationChange": {
+            "description": "Change in elevation",
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "ElevationGain": {
+            "description": "Increase in elevation without subtracting any decrease",
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "FacilityID": {
+            "description": "The ID of the facility attended",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "FacilityGroupID": {
+            "description": "The ID of the facility group",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "Title": {
+            "description": "A text description of the activity. Title can depend on which property is the most important.",
+            "type": "string",
+            "example": "Walking 1.17 miles"
+          },
+          "IsDeleted": {
+            "description": "If the activity has been deleted",
+            "type": "boolean",
+            "example": false
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-06-03 04:45:39"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-06-02 06:42:43"
+          }
+        },
+        "type": "object"
+      },
+      "ActivityTypes": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityType"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Unit": {
+        "properties": {
+          "UnitID": {
+            "description": "The unique ID of the Unit",
+            "type": "integer",
+            "format": "int32"
+          },
+          "UnitSingular": {
+            "description": "The name of this unit, singular",
+            "type": "string"
+          },
+          "UnitPlural": {
+            "description": "The name of this unit, plural",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "example": {
+          "UnitID": 5,
+          "UnitSingular": "step",
+          "UnitPlural": "steps"
+        }
+      },
+      "ActivityType": {
+        "properties": {
+          "ActivityTypeID": {
+            "description": "The unique ID of the Activity Type",
+            "type": "integer",
+            "format": "int32",
+            "example": "5"
+          },
+          "Name": {
+            "description": "The name of this activity type",
+            "type": "string",
+            "example": "Running"
+          },
+          "CanSelfReportActivity": {
+            "description": "Whether or not this type of activity can be self-reported",
+            "type": "boolean",
+            "example": true
+          },
+          "CanAdminReportActivity": {
+            "description": "Whether or not this type of activity can be admin-reported",
+            "type": "boolean",
+            "example": true
+          },
+          "CanDeviceReportActivity": {
+            "description": "Whether or not this type of activity can be reported by a fitness tracker",
+            "type": "boolean",
+            "example": true
+          },
+          "CanGeoLocateActivity": {
+            "description": "Whether or not this type of activity can be verified by geo-located checked-in",
+            "type": "boolean",
+            "example": false
+          },
+          "CanDocUploadActivity": {
+            "description": "Whether or not this type of activity can be verified by a document upload",
+            "type": "boolean",
+            "example": false
+          },
+          "CanQRCodeActivity": {
+            "description": "Whether or not this type of activity can be verified by a QR code scan",
+            "type": "boolean",
+            "example": false
+          },
+          "CanSystemReportActivity": {
+            "description": "Whether or not this type of activity can be reported by the IncentFit system",
+            "type": "boolean",
+            "example": false
+          },
+          "CanThirdPartyReportActivity": {
+            "description": "Whether or not this type of activity can be verified by a third-party",
+            "type": "boolean",
+            "example": false
+          },
+          "DistanceUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "DurationUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "CalorieUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "AttendanceUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "CountUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "ActionUnits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            }
+          },
+          "DocName": {
+            "description": "The name of the document that can be uploaded to verify this type of activity",
+            "type": "string",
+            "example": null
+          },
+          "ImageUrl": {
+            "description": "A URL to an icon image for this activity type",
+            "type": "string",
+            "example": "https://content.incentfit.com/activity_types_flat/activitytype5.png"
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2013-08-11 00:00:00"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2013-08-11 00:00:00"
+          }
+        },
+        "type": "object"
+      },
+      "ExercisesPage": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Exercise"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Exercise": {
+        "properties": {
+          "DeviceExerciseID": {
+            "description": "DeviceExerciseID",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "IndividualID": {
+            "description": "The ID of the individual",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "OrganizationID": {
+            "description": "The ID of the organization the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "UserGroupID": {
+            "description": "The ID of the user group (incentive plan) the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "ThirdPartyID": {
+            "description": "Unique ID in source service or auto generated during import",
+            "type": "string",
+            "example": "de5856134778cbf303fa13fba54011f8"
+          },
+          "ThirdPartyActivityTypeID": {
+            "description": "The activity type ID reported from the source service.",
+            "type": "string",
+            "example": "8"
+          },
+          "SourceService": {
+            "description": "The service we received this data from",
+            "type": "string",
+            "format": "string",
+            "example": "googlefit"
+          },
+          "StartTime": {
+            "description": "Start Time",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-11-30 16:14:58"
+          },
+          "Offset": {
+            "description": "The timezone offset that was in effect when this activity was recorded",
+            "type": "integer",
+            "format": "int32",
+            "example": -300
+          },
+          "ActivityTypeID": {
+            "description": "The activity type based on the IncentFit activity types lookup table",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "TrackerID": {
+            "description": "The ID of tracker which recorded this data. Can be looked up in the IncentFit lookup table trackers. Can be a hardware tracker like a watch or Fitbit or an app running on a smartphone or other third party solutions.",
+            "type": "string",
+            "example": null
+          },
+          "AppID": {
+            "description": "The ID of the app which recorded this activity original. Can be looked up in the IncentFit lookup table apps.",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "ServiceID": {
+            "description": "The ID of the service which recorded this activity originally. Can be looked up in the IncentFit lookup table services. This is not the same as the SourceService field and will only be populated when SourceService is validic",
+            "type": "string",
+            "example": null
+          },
+          "MobileDeviceID": {
+            "description": "ID",
+            "type": "string",
+            "example": null
+          },
+          "DeviceRecorded": {
+            "description": "If this activity was recorded by a device directly or manually entered.",
+            "type": "boolean",
+            "format": "bool",
+            "example": true
+          },
+          "ElevationChange": {
+            "description": "Change in elevation recorded. Can be negative. In meters.",
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "Distance": {
+            "description": "Distance in meters",
+            "type": "number",
+            "format": "double",
+            "example": 3575.3712
+          },
+          "Calories": {
+            "description": "Calories used during this activity",
+            "type": "number",
+            "format": "double",
+            "example": 263.29
+          },
+          "Steps": {
+            "description": "Steps",
+            "type": "integer",
+            "format": "int32",
+            "example": 3401
+          },
+          "Duration": {
+            "description": "Duration in seconds",
+            "type": "integer",
+            "format": "int32",
+            "example": 1458
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-01 00:20:07"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-01 00:20:07"
+          }
+        },
+        "type": "object"
+      },
+      "RoutinePage": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Routine"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Routine": {
+        "properties": {
+          "DeviceRoutineID": {
+            "description": "DeviceRoutineID",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "IndividualID": {
+            "description": "The ID of the individual",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "OrganizationID": {
+            "description": "The ID of the organization the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "UserGroupID": {
+            "description": "The ID of the user group (incentive plan) the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "Date": {
+            "description": "Date",
+            "type": "string",
+            "format": "date",
+            "example": "2019-03-15"
+          },
+          "SourceService": {
+            "description": "The service we received this data from",
+            "type": "string",
+            "format": "string",
+            "example": "applehealth"
+          },
+          "TrackerID": {
+            "description": "ID",
+            "type": "integer",
+            "format": "int32",
+            "example": null
+          },
+          "AppID": {
+            "description": "The ID of the app which recorded this Routine original. Can be looked up in the IncentFit lookup table apps.",
+            "type": "integer",
+            "format": "int32",
+            "example": null
+          },
+          "ServiceID": {
+            "description": "The ID of the service which recorded this Routine originally. Can be looked up in the IncentFit lookup table services. This is not the same as the SourceService field and will only be populated when SourceService is validic",
+            "type": "integer",
+            "format": "int32",
+            "example": null
+          },
+          "Distance": {
+            "description": "Distance in meters",
+            "type": "number",
+            "format": "double",
+            "example": 1714.83
+          },
+          "Calories": {
+            "description": "Calories used during this Routine",
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "Steps": {
+            "description": "Steps",
+            "type": "integer",
+            "format": "int32",
+            "example": 2586
+          },
+          "Duration": {
+            "description": "Duration in seconds",
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-03-18 14:26:16"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-03-18 14:26:16"
+          }
+        },
+        "type": "object"
+      },
+      "SleepPage": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sleep"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Sleep": {
+        "properties": {
+          "DeviceSleepID": {
+            "description": "ID",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "IndividualID": {
+            "description": "The ID of the individual",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "OrganizationID": {
+            "description": "The ID of the organization the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "UserGroupID": {
+            "description": "The ID of the user group (incentive plan) the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "ThirdPartyID": {
+            "description": "Unique ID in source service or auto generated during import",
+            "type": "string",
+            "example": "24865441983"
+          },
+          "ThirdPartyActivityTypeID": {
+            "description": "The Activity type ID reported from the source service",
+            "type": "string",
+            "example": null
+          },
+          "SourceService": {
+            "description": "The service we received this data from",
+            "type": "string",
+            "format": "string",
+            "example": "fitbit"
+          },
+          "StartTime": {
+            "description": "Start Time",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-03 01:42:00"
+          },
+          "Offset": {
+            "description": "The timezone offset that was in effect when this Sleep was recorded",
+            "type": "integer",
+            "format": "int32",
+            "example": -300
+          },
+          "EndTime": {
+            "description": "End Time",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-03 07:12:30"
+          },
+          "TrackerID": {
+            "description": "The ID of tracker which recorded this data. Can be looked up in the IncentFit lookup table trackers. Can be a hardware tracker like a watch or Fitbit or an app running on a smartphone or other third party solutions.",
+            "type": "string",
+            "example": null
+          },
+          "AppID": {
+            "description": "The ID of the app which recorded this Sleep original. Can be looked up in the IncentFit lookup table apps.",
+            "type": "string",
+            "example": null
+          },
+          "ServiceID": {
+            "description": "The ID of the service which recorded this Sleep originally. Can be looked up in the IncentFit lookup table services. This is not the same as the SourceService field and will only be populated when SourceService is validic",
+            "type": "string",
+            "example": null
+          },
+          "MobileDeviceID": {
+            "description": "ID",
+            "type": "string",
+            "example": null
+          },
+          "DeviceRecorded": {
+            "description": "If this Sleep was recorded by a device directly or manually entered.",
+            "type": "boolean",
+            "format": "bool",
+            "example": null
+          },
+          "Duration": {
+            "description": "Duration in seconds",
+            "type": "integer",
+            "format": "int32",
+            "example": 19800
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-04 11:59:35"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2019-12-04 11:59:35"
+          }
+        },
+        "type": "object"
+      },
+      "PaymentPage": {
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Payment"
+            }
+          },
+          "count": {
+            "description": "Count of results in this page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "offset": {
+            "description": "Offset from start of database result.",
+            "type": "integer",
+            "format": "int32",
+            "example": 55000
+          },
+          "limit": {
+            "description": "The max size of the page.",
+            "type": "integer",
+            "format": "int32",
+            "example": 1000
+          },
+          "total": {
+            "description": "Total number of records for all for this query.",
+            "type": "integer",
+            "format": "int32",
+            "example": 782910
+          },
+          "orderby": {
+            "description": "$fieldName ASC|DESC",
+            "type": "string",
+            "format": "string",
+            "example": "DateModified ASC"
+          }
+        },
+        "type": "object"
+      },
+      "Payment": {
+        "properties": {
+          "PaymentID": {
+            "description": "The unique ID of the Payment",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "IndividualID": {
+            "description": "The ID of the individual",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "OrganizationID": {
+            "description": "The ID of the organization the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "UserGroupID": {
+            "description": "The ID of the user group (incentive plan) the individual belongs to",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "PaymentDate": {
+            "description": "The date the payment was sent",
+            "type": "string",
+            "format": "date",
+            "example": "2020-06-02"
+          },
+          "ArrivalDate": {
+            "description": "The date the payment was received by the user",
+            "type": "string",
+            "format": "date",
+            "example": "2020-06-05"
+          },
+          "RewardAmount": {
+            "description": "Amount awarded in the unit of the Benefit Plan",
+            "type": "number",
+            "format": "double",
+            "example": 1.17
+          },
+          "PaymentAmount": {
+            "description": "Amount awarded in currency",
+            "type": "number",
+            "format": "double",
+            "example": 1.17
+          },
+          "Method": {
+            "description": "How the payment was delivered.",
+            "type": "string",
+            "example": "ADP"
+          },
+          "DateModified": {
+            "description": "Date modified",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-06-03 04:45:39"
+          },
+          "DateAdded": {
+            "description": "Date created",
+            "type": "string",
+            "format": "date-time",
+            "example": "2020-06-02 06:42:43"
+          }
+        },
+        "type": "object"
+      },
+      "ListResponse": {
+        "title": "SCIM List Resources",
+        "description": "SCIM List Resource",
+        "properties": {
+          "schemas": {
+            "description": "schemas",
+            "type": "array",
+            "format": "string",
+            "items": {
+              "type": "string",
+              "example": "urn:ietf:params:scim:api:messages:2.0:ListResponse",
+              "default": "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+            }
+          },
+          "totalResults": {
+            "description": "totalResults",
+            "type": "integer",
+            "example": 1200
+          },
+          "itemsPerPage": {
+            "description": "itemsPerPage",
+            "type": "integer",
+            "example": 25
+          },
+          "startIndex": {
+            "description": "startIndex",
+            "type": "integer",
+            "example": 1
+          }
+        },
+        "type": "object"
+      },
+      "User": {
+        "title": "User SCIM Resource",
+        "description": "User SCIM Resource",
+        "properties": {
+          "schemas": {
+            "description": "schemas",
+            "type": "array",
+            "format": "string",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "urn:ietf:params:scim:schemas:core:2.0:User",
+              "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+              "urn:incentfit:params:scim:schemas:1.0:Individual"
+            ]
+          },
+          "id": {
+            "description": "User ID (SqID encoded)",
+            "type": "string",
+            "example": "86Rf07xd"
+          },
+          "externalId": {
+            "description": "Unique ID for the user",
+            "type": "string",
+            "example": "UID213A"
+          },
+          "userName": {
+            "description": "Username (typically email)",
+            "type": "string",
+            "example": "john+doe@incentfit.com"
+          },
+          "name": {
+            "description": "Name",
+            "properties": {
+              "formatted": {
+                "description": "Formatted name for display",
+                "type": "string",
+                "example": "Ms. Barbara J Jensen, III"
+              },
+              "familyName": {
+                "description": "Family name",
+                "type": "string",
+                "example": "Jensen"
+              },
+              "givenName": {
+                "description": "Given name",
+                "type": "string",
+                "example": "Barbara"
+              },
+              "middleName": {
+                "description": "Middle name",
+                "type": "string",
+                "example": "J"
+              },
+              "honorificPrefix": {
+                "description": "Honorific Prefix",
+                "type": "string",
+                "example": "Ms."
+              },
+              "honorificSuffix": {
+                "description": "Honorific Suffix",
+                "type": "string",
+                "example": "III"
+              }
+            },
+            "type": "object"
+          },
+          "displayName": {
+            "description": "Display Name",
+            "type": "string",
+            "example": "Barbara Jensen"
+          },
+          "nickName": {
+            "description": "Nickname",
+            "type": "string",
+            "example": "Babs"
+          },
+          "emails": {
+            "description": "Emails",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Email"
+            }
+          },
+          "phoneNumbers": {
+            "description": "Phone numbers",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            }
+          },
+          "userType": {
+            "description": "User type",
+            "type": "string",
+            "example": "Individual"
+          },
+          "preferredLanguage": {
+            "description": "Preferred language",
+            "type": "string",
+            "example": "en-US"
+          },
+          "locale": {
+            "description": "Locale setting",
+            "type": "string",
+            "example": "en-US"
+          },
+          "timezone": {
+            "description": "Timezone",
+            "type": "string",
+            "example": "America/Los_Angeles"
+          },
+          "active": {
+            "description": "Whether this user is active",
+            "type": "boolean",
+            "example": true
+          },
+          "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+            "description": "SCIM Enterprise Schema",
+            "properties": {
+              "employeeNumber": {
+                "description": "Employee number",
+                "type": "string",
+                "example": "12345"
+              },
+              "organization": {
+                "description": "Organization",
+                "type": "string",
+                "example": "IncentFit"
+              }
+            },
+            "type": "object"
+          },
+          "urn:incentfit:params:scim:schemas:1.0:Individual": {
+            "description": "IncentFit Individual Extension",
+            "properties": {
+              "UserGroupID": {
+                "description": "User Group ID (SqID encoded)",
+                "type": "string",
+                "example": "86Rf07xd"
+              },
+              "OrganizationID": {
+                "description": "Organization ID (SqID encoded, read-only)",
+                "type": "string",
+                "example": "86Rf07xd"
+              },
+              "Alias": {
+                "description": "Preferred name / alias",
+                "type": "string"
+              },
+              "Birthday": {
+                "description": "Date of birth (YYYY-MM-DD)",
+                "type": "string",
+                "example": "2002-06-20"
+              },
+              "Gender": {
+                "description": "Gender: Male, Female, Non-binary",
+                "type": "string",
+                "example": "Female"
+              },
+              "Tags": {
+                "description": "Tags/labels",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Engineering",
+                  "Remote"
+                ]
+              },
+              "EligibilityStart": {
+                "description": "Eligibility start date (YYYY-MM-DD)",
+                "type": "string"
+              },
+              "EligibilityEnd": {
+                "description": "Eligibility end date (YYYY-MM-DD)",
+                "type": "string"
+              },
+              "AbsoluteUniqueID": {
+                "description": "Globally unique ID (e.g. SSN)",
+                "type": "string"
+              },
+              "UniqueCompanyID": {
+                "description": "Company/payroll code",
+                "type": "string"
+              },
+              "DependentOfEmail": {
+                "description": "Parent employee email for dependents",
+                "type": "string"
+              },
+              "DependentOfUniqueID": {
+                "description": "Parent employee UniqueID for dependents",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "Email": {
+        "properties": {
+          "value": {
+            "description": "Email",
+            "type": "string",
+            "example": "john+doe@incentfit.com"
+          },
+          "type": {
+            "description": "Type",
+            "type": "string",
+            "example": "work"
+          },
+          "primary": {
+            "description": "True if primary email",
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "type": "object"
+      },
+      "Address": {
+        "properties": {
+          "streetAddress": {
+            "description": "Street Address",
+            "type": "string",
+            "example": "100 Universal City Plaza"
+          },
+          "locality": {
+            "description": "Locality",
+            "type": "string",
+            "example": "Hollywood"
+          },
+          "region": {
+            "description": "Region",
+            "type": "string",
+            "example": "CA"
+          },
+          "postalCode": {
+            "description": "Postal code",
+            "type": "string",
+            "example": "91608"
+          },
+          "country": {
+            "description": "Country",
+            "type": "string",
+            "example": "USA"
+          },
+          "formatted": {
+            "description": "Fully qualified formatted address",
+            "type": "string",
+            "example": "100 Universal City Plaza\nHollywood, CA 91608 USA"
+          },
+          "type": {
+            "description": "Type",
+            "type": "string",
+            "example": "work"
+          },
+          "primary": {
+            "description": "True if primary address",
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "type": "object"
+      },
+      "PhoneNumber": {
+        "properties": {
+          "value": {
+            "description": "Phone number",
+            "type": "string",
+            "example": "555-555-5555"
+          },
+          "type": {
+            "description": "Type",
+            "type": "string",
+            "example": "work"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OpenID": {
+        "type": "openIdConnect",
+        "openIdConnectUrl": "https://api.incentfit.com/.well-known/openid-configuration"
+      },
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Bearer token from the access_token endpoint. Prepend with 'Bearer '",
+        "name": "Authorization",
+        "in": "header"
+      },
+      "OAuth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.incentfit.com/v2/oauth2/access_token",
+            "scopes": {
+              "openid": "OpenID Connect",
+              "api": "Full API access"
+            }
+          },
+          "authorizationCode": {
+            "authorizationUrl": "https://api.incentfit.com/v2/oauth2/authorize",
+            "tokenUrl": "https://api.incentfit.com/v2/oauth2/token",
+            "refreshUrl": "https://api.incentfit.com/v2/oauth2/token",
+            "scopes": {
+              "openid": "OpenID Connect",
+              "api": "Full API access"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Activities",
+      "description": "REST endpoints for querying activities and activity types. All use POST with optional filter, sort, and pagination parameters. Requires Bearer token."
+    },
+    {
+      "name": "Fitness Data",
+      "description": "REST endpoints for querying raw fitness device data: exercises, routines, and sleep records. Requires Bearer token."
+    },
+    {
+      "name": "Payments",
+      "description": "REST endpoint for querying payment records. Requires Bearer token."
+    },
+    {
+      "name": "User Provisioning",
+      "description": "SCIM 2.0 ([RFC 7644](https://tools.ietf.org/html/rfc7644)) endpoints for automated user lifecycle management.\n\n## Setup\n\n**Base URL:** `https://api.incentfit.com/v2/scim`\n\n**Authentication:** OAuth2 Bearer token — obtain via `POST /v2/oauth2/access_token` with `grant_type=client_credentials`, then include as `Authorization: Bearer {token}`.\n\n## Supported Operations\n\n<table>\n<thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>\n<tbody>\n<tr><td>GET</td><td><code>/v2/scim/Users</code></td><td>List users (with filter and pagination)</td></tr>\n<tr><td>POST</td><td><code>/v2/scim/Users</code></td><td>Create user</td></tr>\n<tr><td>GET</td><td><code>/v2/scim/Users/{id}</code></td><td>Get single user</td></tr>\n<tr><td>PUT</td><td><code>/v2/scim/Users/{id}</code></td><td>Replace user (full update)</td></tr>\n<tr><td>PATCH</td><td><code>/v2/scim/Users/{id}</code></td><td>Partial update (e.g. deactivate)</td></tr>\n<tr><td>DELETE</td><td><code>/v2/scim/Users/{id}</code></td><td>Deactivate user (soft delete)</td></tr>\n<tr><td>GET</td><td><code>/v2/scim/ServiceProviderConfig</code></td><td>Discovery: capabilities</td></tr>\n<tr><td>GET</td><td><code>/v2/scim/Schemas</code></td><td>Discovery: supported schemas</td></tr>\n<tr><td>GET</td><td><code>/v2/scim/ResourceTypes</code></td><td>Discovery: resource types</td></tr>\n</tbody>\n</table>\n\n## Entity Scoping\n\nSCIM endpoints automatically use all entities (Partners, Organizations, or User Groups) linked to the API client.\n\n## Attribute Mapping\n\nCore SCIM attributes (`userName`, `name`, `emails`, `phoneNumbers`, `active`, `externalId`) map directly to IncentFit user fields. Two schema extensions provide additional attributes:\n\n**Enterprise User** (`urn:ietf:params:scim:schemas:extension:enterprise:2.0:User`): `employeeNumber`, `organization` (read-only), `hireDate`\n\n**IncentFit Individual** (`urn:incentfit:params:scim:schemas:1.0:Individual`): `UserGroupID`, `Birthday`, `Gender`, `Tags`, `EligibilityStart`, `EligibilityEnd`, `AbsoluteUniqueID`, `UniqueCompanyID`, `DependentOfEmail`, `DependentOfUniqueID`\n\n## Deactivation\n\nSetting `active` to `false` (via PATCH or DELETE) deactivates the user by setting their eligibility end date. Users are never permanently deleted.\n\n## User Matching\n\nWhen creating users (POST), the system matches against existing records using the organization's configured matching strategy (email, unique ID, or absolute unique ID). If a matching inactive user is found, they are reactivated instead of creating a duplicate."
+    },
+    {
+      "name": "System",
+      "description": "Unauthenticated utility endpoints."
+    }
+  ]
+}

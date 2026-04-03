@@ -23,10 +23,13 @@
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
+		"dev:staging": "INCENTFIT_BASE_URL=https://stg-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
+		"dev:local": "INCENTFIT_BASE_URL=https://gabe.local-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
 		"release": "n8n-node release",
-		"prepublishOnly": "n8n-node prerelease"
+		"prepublishOnly": "n8n-node prerelease",
+		"update-openapi": "node scripts/update-openapi.js"
 	},
 	"files": [
 		"dist"
@@ -35,8 +38,11 @@
 		"n8nNodesApiVersion": 1,
 		"strict": true,
 		"credentials": [
+			"dist/credentials/IncentFitClientCredentialsOAuth2Api.credentials.js",
+			"dist/credentials/IncentFitAuthorizationCodeOAuth2Api.credentials.js"
 		],
 		"nodes": [
+			"dist/nodes/IncentFit/IncentFit.node.js"
 		]
 	},
 	"devDependencies": {

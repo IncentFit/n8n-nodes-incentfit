@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-incentfit.incentFit",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["HR", "Productivity"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://api.incentfit.com/v2/docs#tag/OAuth2"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/IncentFit/n8n-nodes-incentfit"
+			}
+		]
+	}
+}
