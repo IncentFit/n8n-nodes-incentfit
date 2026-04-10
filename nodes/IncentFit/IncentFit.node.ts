@@ -484,12 +484,28 @@ export class IncentFit implements INodeType {
 								name: 'field',
 								type: 'options',
 								options: [
+									{
+										name: 'Absolute Unique ID',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:AbsoluteUniqueID',
+									},
 									{ name: 'Active', value: 'active' },
+									{
+										name: 'Alias',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:Alias',
+									},
 									{
 										name: 'Birthday',
 										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:Birthday',
 									},
-									{ name: 'Email', value: 'userName' },
+									{
+										name: 'Eligibility End',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:EligibilityEnd',
+									},
+									{
+										name: 'Eligibility Start',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:EligibilityStart',
+									},
+									{ name: 'Email', value: 'emails.value' },
 									{
 										name: 'Employee Number',
 										value:
@@ -501,23 +517,32 @@ export class IncentFit implements INodeType {
 										name: 'Gender',
 										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:Gender',
 									},
+									{
+										name: 'Hire Date',
+										value:
+											'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:hireDate',
+									},
 									{ name: 'ID', value: 'id' },
 									{ name: 'Last Name', value: 'name.familyName' },
 									{
-										name: 'Organization',
+										name: 'Organization ID',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:OrganizationID',
+									},
+									{
+										name: 'Organization Name',
 										value:
 											'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:organization',
 									},
 									{
-										name: 'Tags',
-										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:Tags',
+										name: 'Unique Company ID',
+										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:UniqueCompanyID',
 									},
 									{
 										name: 'User Group ID',
 										value: 'urn:incentfit:params:scim:schemas:1.0:Individual:UserGroupID',
 									},
 								],
-								default: 'userName',
+								default: 'emails.value',
 							},
 							{
 								displayName: 'Operator',
