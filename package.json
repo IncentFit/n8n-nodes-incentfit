@@ -1,61 +1,50 @@
 {
-	"name": "n8n-nodes-incentfit",
-	"version": "0.1.0",
-	"description": "n8n community node for the IncentFit wellness incentive API",
-	"license": "MIT",
-	"homepage": "https://github.com/IncentFit/n8n-nodes-incentfit",
-	"keywords": [
-		"n8n-community-node-package",
-		"incentfit",
-		"wellness",
-		"fitness",
-		"incentives"
-	],
-	"author": {
-		"name": "IncentFit",
-		"email": "api@incentfit.com"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/IncentFit/n8n-nodes-incentfit.git"
-	},
-	"scripts": {
-		"build": "n8n-node build",
-		"build:watch": "tsc --watch",
-		"dev": "n8n-node dev",
-		"dev:staging": "INCENTFIT_BASE_URL=https://stg-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
-		"dev:local": "INCENTFIT_BASE_URL=https://gabe.local-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
-		"lint": "n8n-node lint",
-		"lint:fix": "n8n-node lint --fix",
-		"release": "n8n-node release",
-		"prepublishOnly": "n8n-node prerelease",
-		"update-openapi": "node scripts/update-openapi.js"
-	},
-	"files": [
-		"dist"
-	],
-	"n8n": {
-		"n8nNodesApiVersion": 1,
-		"strict": true,
-		"credentials": [
-			"dist/credentials/IncentFitClientCredentialsOAuth2Api.credentials.js",
-			"dist/credentials/IncentFitAuthorizationCodeOAuth2Api.credentials.js"
-		],
-		"nodes": [
-			"dist/nodes/IncentFit/IncentFit.node.js"
-		]
-	},
-	"devDependencies": {
-		"@n8n/node-cli": "*",
-		"eslint": "9.39.4",
-		"prettier": "3.8.1",
-		"release-it": "19.2.4",
-		"typescript": "5.9.3"
-	},
-	"peerDependencies": {
-		"n8n-workflow": "*"
-	},
-	"dependencies": {
-		"@devlikeapro/n8n-openapi-node": "^0.1.4"
-	}
+  "name": "n8n-nodes-incentfit",
+  "version": "0.1.0",
+  "description": "n8n community node for the IncentFit wellness incentive API",
+  "license": "MIT",
+  "homepage": "https://github.com/IncentFit/n8n-nodes-incentfit",
+  "keywords": [
+    "n8n-community-node-package",
+    "incentfit",
+    "wellness",
+    "fitness",
+    "incentives"
+  ],
+  "author": { "name": "IncentFit", "email": "api@incentfit.com" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IncentFit/n8n-nodes-incentfit.git"
+  },
+  "scripts": {
+    "build": "n8n-node build",
+    "build:watch": "tsc --watch",
+    "dev": "n8n-node dev",
+    "dev:staging": "INCENTFIT_BASE_URL=https://stg-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
+    "dev:local": "INCENTFIT_BASE_URL=https://gabe.local-api.incentfit.com INCENTFIT_DEBUG=true n8n-node dev",
+    "lint": "n8n-node lint",
+    "lint:fix": "n8n-node lint --fix",
+    "release": "n8n-node release",
+    "prepublishOnly": "n8n-node prerelease",
+    "update-openapi": "node scripts/update-openapi.js"
+  },
+  "files": ["dist"],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": false,
+    "credentials": [
+      "dist/credentials/IncentFitClientCredentialsOAuth2Api.credentials.js",
+      "dist/credentials/IncentFitAuthorizationCodeOAuth2Api.credentials.js"
+    ],
+    "nodes": ["dist/nodes/IncentFit/IncentFit.node.js"]
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "*",
+    "eslint": "9.39.4",
+    "prettier": "3.8.1",
+    "release-it": "19.2.4",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": { "n8n-workflow": "*" },
+  "dependencies": { "@devlikeapro/n8n-openapi-node": "^0.1.4" }
 }
